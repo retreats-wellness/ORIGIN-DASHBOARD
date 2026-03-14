@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORIGIN AI — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500&family=EB+Garamond:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-size: 16px; }
+body {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 300;
+  background: #0a0a0a;
+  color: #fff;
+  overflow: hidden;
+}
+:root {
+  --black: #0a0a0a;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.1);
+  --gold-border: rgba(201,168,76,0.3);
+  --line: rgba(255,255,255,0.07);
+  --text-dim: rgba(255,255,255,0.32);
+  --text-mid: rgba(255,255,255,0.55);
+  --green: #4caf82;
+}
+.app { display: flex; flex-direction: column; height: 100vh; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 52px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+.topbar-logo {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+  font-size: 1rem; letter-spacing: 0.18em; text-transform: uppercase;
+}
+.topbar-logo span { color: var(--gold); }
+.topbar-right { display: flex; align-items: center; gap: 1.5rem; }
+.countdown-pill {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); border: 1px solid var(--gold-border); padding: 0.28rem 0.8rem;
+}
+.live-dot {
+  display: flex; align-items: center; gap: 0.45rem;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.body { display: flex; flex: 1; overflow: hidden; }
+.sidebar {
+  width: 220px; border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; overflow-y: auto;
+  flex-shrink: 0; padding: 1rem 0 2rem;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+.sidebar-label {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.57rem; letter-spacing: 0.38em; text-transform: uppercase;
+  color: var(--gold); padding: 1.1rem 1.4rem 0.45rem;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 1.4rem;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim);
+  cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; user-select: none;
+}
+.nav-item:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: #fff; border-left-color: var(--gold); background: var(--gold-dim); }
+.nav-badge {
+  margin-left: auto; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.58rem; letter-spacing: 0.1em; padding: 1px 6px; border: 1px solid;
+}
+.nav-badge.gold { color: var(--gold); border-color: var(--gold-border); background: var(--gold-dim); }
+.nav-badge.green { color: var(--green); border-color: rgba(76,175,130,0.3); background: rgba(76,175,130,0.08); }
+.nav-badge.gray { color: var(--text-dim); border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); }
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.main::-webkit-scrollbar { width: 3px; }
+.main::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+.page { display: none; flex-direction: column; flex: 1; }
+.page.active { display: flex; }
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 2rem 2.5rem 1.5rem; border-bottom: 1px solid var(--line); flex-shrink: 0;
+}
+.page-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 0.4rem;
+}
+.page-title {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+  font-size: 3rem; line-height: 0.9; text-transform: uppercase; letter-spacing: -0.01em;
+}
+.header-btns { display: flex; gap: 0.7rem; align-items: flex-end; }
+.btn {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+  border: 1px solid; background: transparent; padding: 0.55rem 1.3rem;
+  cursor: pointer; transition: all 0.18s;
+}
+.btn-gold { border-color: var(--gold); color: var(--gold); }
+.btn-gold:hover { background: var(--gold); color: var(--black); }
+.btn-ghost { border-color: rgba(255,255,255,0.2); color: var(--text-mid); }
+.btn-ghost:hover { border-color: #fff; color: #fff; }
+.btn-sm {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.15); background: transparent;
+  color: var(--text-dim); padding: 2px 10px; cursor: pointer; transition: all 0.18s;
+}
+.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
+.page-scroll {
+  flex: 1; overflow-y: auto; padding: 2rem 2.5rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+.page-scroll::-webkit-scrollbar { width: 3px; }
+.page-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 2px; background: rgba(255,255,255,0.06);
+}
+.stat-card {
+  background: var(--black); padding: 1.4rem 1.5rem;
+  border-top: 2px solid transparent; transition: border-color 0.25s; cursor: default;
+}
+.stat-card:hover { border-top-color: var(--gold); }
+.stat-label {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.57rem; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 0.65rem;
+}
+.stat-num {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 300;
+  font-size: 2.2rem; line-height: 1; letter-spacing: -0.02em;
+}
+.stat-sub {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.62rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-top: 0.35rem;
+}
+.stat-sub.pos { color: var(--green); }
+.stat-sub.gold { color: var(--gold); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: rgba(255,255,255,0.06); }
+.panel { background: var(--black); padding: 1.6rem; }
+.panel-title {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.6rem; letter-spacing: 0.32em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 1.1rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-action { color: var(--gold); cursor: pointer; transition: opacity 0.2s; font-weight: 700; }
+.panel-action:hover { opacity: 0.65; }
+.script-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer; transition: background 0.12s;
+}
+.script-row:last-child { border-bottom: none; }
+.script-row:hover { background: rgba(255,255,255,0.03); margin: 0 -1.6rem; padding: 0.7rem 1.6rem; }
+.script-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;
+  color: rgba(255,255,255,0.82);
+}
+.script-desc { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+.script-meta { display: flex; align-items: center; gap: 0.65rem; }
+.tag {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.58rem;
+  letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 7px; border: 1px solid;
+}
+.tag-final { color: var(--green); border-color: rgba(76,175,130,0.3); background: rgba(76,175,130,0.08); }
+.tag-tested { color: var(--gold); border-color: var(--gold-border); background: var(--gold-dim); }
+.tag-draft { color: var(--text-dim); border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); }
+.tag-ready { color: var(--green); border-color: rgba(76,175,130,0.3); background: rgba(76,175,130,0.08); }
+.phase-row {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.9rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.phase-row:last-child { border-bottom: none; }
+.phase-num {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+  font-size: 1.8rem; line-height: 1; color: rgba(255,255,255,0.07); min-width: 32px;
+}
+.phase-info { flex: 1; }
+.phase-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.82rem; letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgba(255,255,255,0.78); margin-bottom: 3px;
+}
+.phase-sub { font-size: 0.7rem; color: var(--text-dim); }
+.phase-right { text-align: right; }
+.progress-bar { width: 80px; height: 2px; background: rgba(255,255,255,0.07); margin-bottom: 4px; }
+.progress-fill { height: 100%; background: var(--gold); }
+.progress-fill.green { background: var(--green); }
+.progress-pct {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.6rem;
+  letter-spacing: 0.1em; color: var(--text-dim);
+}
+.activity-item {
+  display: flex; gap: 0.85rem;
+  padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.activity-item:last-child { border-bottom: none; }
+.a-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.a-dot.gold { background: var(--gold); }
+.a-dot.green { background: var(--green); }
+.a-dot.gray { background: rgba(255,255,255,0.18); }
+.a-text { font-size: 0.76rem; color: var(--text-mid); line-height: 1.55; }
+.a-text strong {
+  color: rgba(255,255,255,0.85); font-weight: 500;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.78rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.a-time {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-top: 2px;
+}
+.workspace-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; background: rgba(255,255,255,0.06);
+}
+.ws-card {
+  background: var(--black); padding: 1.5rem;
+  border-top: 2px solid transparent; cursor: pointer; transition: border-color 0.22s;
+}
+.ws-card:hover { border-top-color: var(--gold); }
+.ws-tag {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.57rem; letter-spacing: 0.38em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 0.65rem;
+}
+.ws-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+  font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.02em;
+  line-height: 1; margin-bottom: 0.55rem;
+}
+.ws-desc { font-size: 0.73rem; color: var(--text-dim); line-height: 1.62; margin-bottom: 1rem; }
+.ws-files { display: flex; flex-direction: column; gap: 4px; }
+.ws-file {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.68rem;
+  letter-spacing: 0.04em; color: rgba(255,255,255,0.28);
+  display: flex; align-items: center; gap: 7px;
+}
+.ws-file::before { content:''; width:4px; height:4px; background: rgba(255,255,255,0.12); flex-shrink:0; }
+.ws-file.done { color: rgba(201,168,76,0.65); }
+.ws-file.done::before { background: rgba(201,168,76,0.4); }
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 1rem;
+}
+.pull-quote {
+  border-left: 2px solid var(--gold); padding: 0.6rem 1.2rem;
+  font-family: 'EB Garamond', serif; font-style: italic;
+  font-size: 0.88rem; color: rgba(255,255,255,0.4); line-height: 1.65;
+}
+.scripts-table { width: 100%; border-collapse: collapse; }
+.scripts-table thead tr { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.scripts-table th {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-dim); padding: 0 0 0.75rem; text-align: left;
+}
+.scripts-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.12s; }
+.scripts-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.scripts-table td {
+  padding: 0.85rem 0; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.88rem; letter-spacing: 0.05em; text-transform: uppercase; vertical-align: middle;
+}
+.scripts-table td.muted { color: var(--text-dim); font-weight: 400; font-size: 0.75rem; }
+.scripts-table td:last-child { text-align: right; }
+.run-select {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.82rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+  color: #fff; padding: 0.55rem 0.85rem; width: 100%; cursor: pointer; outline: none;
+}
+.run-select option { background: #1a1a1a; }
+.run-select:focus { border-color: var(--gold); }
+.run-output {
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);
+  padding: 1rem; font-family: monospace; font-size: 0.72rem;
+  color: rgba(255,255,255,0.45); line-height: 1.7; min-height: 80px; white-space: pre-wrap;
+}
+.brand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: rgba(255,255,255,0.06); }
+.brand-card {
+  background: var(--black); padding: 1.5rem;
+  cursor: pointer; border-top: 2px solid transparent; transition: border-color 0.22s;
+}
+.brand-card:hover { border-top-color: var(--gold); }
+.brand-file-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 1rem; letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;
+}
+.brand-file-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.6; margin-bottom: 1rem; }
+.content-list { display: flex; flex-direction: column; gap: 2px; }
+.content-item {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+  padding: 1rem 1.25rem; display: flex; align-items: center;
+  justify-content: space-between; cursor: pointer; transition: background 0.12s;
+}
+.content-item:hover { background: rgba(255,255,255,0.04); }
+.content-item-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.content-item-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+.content-item-right { display: flex; gap: 0.7rem; align-items: center; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 1.25rem; }
+.tab {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.6rem 1.1rem; color: var(--text-dim); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s;
+}
+.tab:hover { color: rgba(255,255,255,0.65); }
+.tab.active { color: #fff; border-bottom-color: var(--gold); }
+.kg-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; background: rgba(255,255,255,0.06); }
+.kg-node {
+  background: var(--black); padding: 1.2rem 1.4rem;
+  border-left: 3px solid var(--gold-border); cursor: pointer; transition: border-color 0.2s;
+}
+.kg-node:hover { border-left-color: var(--gold); }
+.kg-node-type {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.55rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 0.4rem;
+}
+.kg-node-name {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.3rem;
+}
+.kg-node-meta { font-size: 0.7rem; color: var(--text-dim); line-height: 1.5; }
+.marquee { background: var(--gold); padding: 0.45rem 0; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
+.marquee-track { display: inline-flex; animation: scroll 35s linear infinite; }
+.marquee-track span {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--black); padding: 0 2rem;
+}
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.footer-bar {
+  border-top: 1px solid var(--line); padding: 0.6rem 2rem;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.footer-text {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.6rem;
+  letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.18);
+}
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content: center; z-index: 999;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #0f0f0f; border: 1px solid rgba(255,255,255,0.12);
+  width: 520px; max-width: 92vw; padding: 2rem;
+}
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+.modal-title {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+  font-size: 1.4rem; text-transform: uppercase; letter-spacing: 0.02em;
+}
+.modal-close {
+  font-size: 1.2rem; color: var(--text-dim); cursor: pointer;
+  background: none; border: none; line-height: 1; transition: color 0.2s;
+}
+.modal-close:hover { color: #fff; }
+.modal-label {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 0.5rem; margin-top: 1rem; display: block;
+}
+.modal-input, .modal-textarea {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  color: #fff; font-family: 'Barlow', sans-serif; font-size: 0.85rem;
+  padding: 0.65rem 0.9rem; outline: none; transition: border-color 0.2s;
+}
+.modal-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.modal-input:focus, .modal-textarea:focus { border-color: var(--gold); }
+.modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">ORIGIN <span>AI</span> — Command Center</div>
+    <div class="topbar-right">
+      <div class="countdown-pill" id="countdown-pill">Oct 17, 2026</div>
+      <div class="live-dot"><div class="dot"></div> System Active</div>
+    </div>
+  </div>
+
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>One Billion Hearts</span><span>·</span>
+      <span>October 17, 2026</span><span>·</span>
+      <span>Global Synchronized Earth Stewardship Event</span><span>·</span>
+      <span>Writing Room</span><span>·</span>
+      <span>Production Scripts</span><span>·</span>
+      <span>Community Distribution</span><span>·</span>
+      <span>Knowledge Graph</span><span>·</span>
+      <span>One Billion Hearts</span><span>·</span>
+      <span>October 17, 2026</span><span>·</span>
+      <span>Global Synchronized Earth Stewardship Event</span><span>·</span>
+      <span>Writing Room</span><span>·</span>
+      <span>Production Scripts</span><span>·</span>
+      <span>Community Distribution</span><span>·</span>
+      <span>Knowledge Graph</span><span>·</span>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="sidebar">
+      <div class="sidebar-label">Overview</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">&#9632; Dashboard</div>
+      <div class="nav-item" onclick="showPage('progress',this)">&#9674; Build Progress <span class="nav-badge gold">Phase 2</span></div>
+      <div class="sidebar-label">Writing Room</div>
+      <div class="nav-item" onclick="showPage('brand',this)">&#9633; Brand Files <span class="nav-badge green">2 Ready</span></div>
+      <div class="nav-item" onclick="showPage('brand',this)">&#9633; Voice Guide <span class="nav-badge green">Ready</span></div>
+      <div class="nav-item" onclick="showPage('brand',this)">&#9633; Audiences <span class="nav-badge gold">Draft</span></div>
+      <div class="sidebar-label">Production</div>
+      <div class="nav-item" onclick="showPage('scripts',this)">&#9654; All Scripts <span class="nav-badge gold">9</span></div>
+      <div class="nav-item" onclick="showPage('run',this)">&#9632; Run a Script</div>
+      <div class="nav-item" onclick="showPage('graph',this)">&#9674; Knowledge Graph</div>
+      <div class="sidebar-label">Community</div>
+      <div class="nav-item" onclick="showPage('community',this)">&#9633; Content Library</div>
+      <div class="nav-item" onclick="showPage('community',this)">&#9633; Email Sequences</div>
+      <div class="nav-item" onclick="showPage('community',this)">&#9633; Organizer Kits</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">One Billion Hearts Fund</div>
+            <div class="page-title">Command<br>Center</div>
+          </div>
+          <div class="header-btns">
+            <button class="btn btn-ghost" onclick="showPage('progress',document.querySelectorAll('.nav-item')[1])">View Progress</button>
+            <button class="btn btn-gold" onclick="openModal()">+ New Brief</button>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Brand Files</div>
+              <div class="stat-num">2 <span style="font-size:1.1rem;color:rgba(255,255,255,0.18)">/5</span></div>
+              <div class="stat-sub pos">2 fully ready</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Scripts Built</div>
+              <div class="stat-num">9</div>
+              <div class="stat-sub gold">All present</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Days to Launch</div>
+              <div class="stat-num" id="days-num">217</div>
+              <div class="stat-sub">Oct 17, 2026</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Current Phase</div>
+              <div class="stat-num" style="font-size:1.5rem;color:var(--gold)">Scripts</div>
+              <div class="stat-sub gold">Phase 2 active</div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-title">
+                Production Scripts
+                <span class="panel-action" onclick="showPage('scripts',document.querySelectorAll('.nav-item')[5])">All Scripts &#8594;</span>
+              </div>
+              <div class="script-row">
+                <div><div class="script-name">story-collector</div><div class="script-desc">Participant story collection</div></div>
+                <div class="script-meta"><span class="tag tag-final">Final</span><button class="btn-sm" onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">Run &#9654;</button></div>
+              </div>
+              <div class="script-row">
+                <div><div class="script-name">email-writer</div><div class="script-desc">Organizer email sequences</div></div>
+                <div class="script-meta"><span class="tag tag-final">Final</span><button class="btn-sm" onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">Run &#9654;</button></div>
+              </div>
+              <div class="script-row">
+                <div><div class="script-name">calendar-generator</div><div class="script-desc">90-day content calendar</div></div>
+                <div class="script-meta"><span class="tag tag-tested">Tested</span><button class="btn-sm" onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">Run &#9654;</button></div>
+              </div>
+              <div class="script-row">
+                <div><div class="script-name">article-generator</div><div class="script-desc">Long-form content drafts</div></div>
+                <div class="script-meta"><span class="tag tag-tested">Tested</span><button class="btn-sm">Run &#9654;</button></div>
+              </div>
+              <div class="script-row">
+                <div><div class="script-name">linkedin-outreach</div><div class="script-desc">Speaker and partner outreach</div></div>
+                <div class="script-meta"><span class="tag tag-draft">Draft</span><button class="btn-sm">Run &#9654;</button></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Recent Activity</div>
+              <div class="activity-item">
+                <div class="a-dot gold"></div>
+                <div>
+                  <div class="a-text"><strong>email-writer.py</strong> marked final &#8212; organizer welcome sequence complete</div>
+                  <div class="a-time">2h ago</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="a-dot green"></div>
+                <div>
+                  <div class="a-text"><strong>origin-voice.md</strong> approved and merged into brand master</div>
+                  <div class="a-time">Yesterday</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="a-dot gold"></div>
+                <div>
+                  <div class="a-text"><strong>calendar-generator.py</strong> tested &#8212; 90-day output generated successfully</div>
+                  <div class="a-time">2 days ago</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="a-dot gray"></div>
+                <div>
+                  <div class="a-text"><strong>origin-audiences.md</strong> draft created &#8212; 5 profiles, pending review</div>
+                  <div class="a-time">3 days ago</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="a-dot green"></div>
+                <div>
+                  <div class="a-text"><strong>story-collector.py</strong> finalized with 3 sample stories tested</div>
+                  <div class="a-time">4 days ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">Three Workspaces &#8212; One-Way Flow</div>
+            <div class="workspace-grid">
+              <div class="ws-card" onclick="showPage('brand',document.querySelectorAll('.nav-item')[2])">
+                <div class="ws-tag">Layer 1 &#8212; Brand</div>
+                <div class="ws-name">Writing Room</div>
+                <div class="ws-desc">Build the voice, vocabulary, and narrative. Everything feeds into origin-brand.md &#8212; the master system prompt injected into every script.</div>
+                <div class="ws-files">
+                  <div class="ws-file done">origin-vocabulary.md</div>
+                  <div class="ws-file done">origin-voice.md</div>
+                  <div class="ws-file">origin-audiences.md</div>
+                  <div class="ws-file">origin-narrative.md</div>
+                  <div class="ws-file">origin-brand.md (master)</div>
+                </div>
+              </div>
+              <div class="ws-card" onclick="showPage('scripts',document.querySelectorAll('.nav-item')[5])">
+                <div class="ws-tag">Layer 2 &#8212; Scripts</div>
+                <div class="ws-name">Production</div>
+                <div class="ws-desc">9 Python scripts. Every one loads origin-brand.md as system prompt. Run individually or from origin-tools.py main menu.</div>
+                <div class="ws-files">
+                  <div class="ws-file done">story-collector.py</div>
+                  <div class="ws-file done">email-writer.py</div>
+                  <div class="ws-file">calendar-generator.py</div>
+                  <div class="ws-file">linkedin-outreach.py</div>
+                  <div class="ws-file">origin-tools.py (menu)</div>
+                </div>
+              </div>
+              <div class="ws-card" onclick="showPage('community',document.querySelectorAll('.nav-item')[8])">
+                <div class="ws-tag">Layer 3 &#8212; Distribution</div>
+                <div class="ws-name">Community</div>
+                <div class="ws-desc">Social, emails, organizer kits, articles. Output from production lands here automatically. Flow is one-way &#8212; never feeds back up.</div>
+                <div class="ws-files">
+                  <div class="ws-file">social/ posts</div>
+                  <div class="ws-file">emails/ sequences</div>
+                  <div class="ws-file">articles/ long-form</div>
+                  <div class="ws-file">organizer-kits/</div>
+                  <div class="ws-file">templates/</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pull-quote">"One-way flow: Writing Room &#8594; Production &#8594; Community. Context stays lean. Output stays on-brand. Every script sounds like ORIGIN automatically."</div>
+        </div>
+      </div>
+
+      <!-- SCRIPTS -->
+      <div class="page" id="page-scripts">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">Production Layer</div>
+            <div class="page-title">All Scripts</div>
+          </div>
+          <div class="header-btns">
+            <button class="btn btn-ghost">Open Folder</button>
+            <button class="btn btn-gold" onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">Run a Script &#8594;</button>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <table class="scripts-table">
+            <thead>
+              <tr>
+                <th>Script</th>
+                <th>Description</th>
+                <th>Output Goes To</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">
+                <td>story-collector.py</td>
+                <td class="muted">Collects participant stories via structured prompt</td>
+                <td class="muted">community/content/articles/</td>
+                <td><span class="tag tag-final">Final</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">
+                <td>email-writer.py</td>
+                <td class="muted">Organizer onboarding and campaign email sequences</td>
+                <td class="muted">community/content/emails/</td>
+                <td><span class="tag tag-final">Final</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>calendar-generator.py</td>
+                <td class="muted">Generates 90-day content calendar from brief</td>
+                <td class="muted">community/content/</td>
+                <td><span class="tag tag-tested">Tested</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>article-generator.py</td>
+                <td class="muted">Long-form articles from topic briefs</td>
+                <td class="muted">community/content/articles/</td>
+                <td><span class="tag tag-tested">Tested</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>linkedin-outreach.py</td>
+                <td class="muted">Speaker and partner outreach messages</td>
+                <td class="muted">community/content/social/</td>
+                <td><span class="tag tag-draft">Draft</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>milestone-poster.py</td>
+                <td class="muted">Social posts tied to fund milestones</td>
+                <td class="muted">community/content/social/</td>
+                <td><span class="tag tag-draft">Draft</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>multilingual-expander.py</td>
+                <td class="muted">Expands any content to French and Dutch</td>
+                <td class="muted">community/content/ (translated)</td>
+                <td><span class="tag tag-draft">Draft</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr>
+                <td>organizer-kit.py</td>
+                <td class="muted">Full kit generator for event organizers</td>
+                <td class="muted">community/content/organizer-kits/</td>
+                <td><span class="tag tag-draft">Draft</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+              <tr onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">
+                <td>origin-tools.py</td>
+                <td class="muted">Main menu &#8212; launches all scripts above</td>
+                <td class="muted">&#8212;</td>
+                <td><span class="tag tag-tested">Tested</span></td>
+                <td><button class="btn-sm">Run &#9654;</button></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div>
+            <div class="section-title" style="margin-top:0.5rem">Suggested Next Builds</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:rgba(255,255,255,0.06)">
+              <div style="background:var(--black);padding:1.2rem 1.4rem;border-left:3px solid var(--gold-border)">
+                <div class="ws-tag">High Value &#8212; Most Strategic</div>
+                <div class="ws-name" style="font-size:1rem">knowledge-graph.py</div>
+                <div class="ws-desc">Connects speakers, concepts, partners. Every script can reference origin-graph.json for accurate output.</div>
+              </div>
+              <div style="background:var(--black);padding:1.2rem 1.4rem;border-left:3px solid rgba(255,255,255,0.08)">
+                <div class="ws-tag">Content Production</div>
+                <div class="ws-name" style="font-size:1rem">website-copy.py</div>
+                <div class="ws-desc">Drafts any new web page from a brief using origin-brand.md as system prompt.</div>
+              </div>
+              <div style="background:var(--black);padding:1.2rem 1.4rem;border-left:3px solid rgba(255,255,255,0.08)">
+                <div class="ws-tag">Event Specific</div>
+                <div class="ws-name" style="font-size:1rem">countdown-generator.py</div>
+                <div class="ws-desc">Daily countdown posts from 100 days out to October 17th. Automatic scheduling.</div>
+              </div>
+              <div style="background:var(--black);padding:1.2rem 1.4rem;border-left:3px solid rgba(255,255,255,0.08)">
+                <div class="ws-tag">Operations</div>
+                <div class="ws-name" style="font-size:1rem">analytics-report.py</div>
+                <div class="ws-desc">Takes raw social/email numbers, writes plain-language weekly summary with 3 recommendations.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RUN -->
+      <div class="page" id="page-run">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">Production Layer</div>
+            <div class="page-title">Run<br>a Script</div>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-title">Script Runner</div>
+              <div style="display:flex;flex-direction:column;gap:0.85rem;background:rgba(201,168,76,0.05);border:1px solid var(--gold-border);padding:1.25rem">
+                <div>
+                  <span class="modal-label" style="display:block;margin-top:0">Select Script</span>
+                  <select class="run-select" id="script-select">
+                    <option value="">&#8212; Choose a script &#8212;</option>
+                    <option value="story-collector">story-collector.py &#8212; Collect participant stories</option>
+                    <option value="email-writer">email-writer.py &#8212; Generate email sequences</option>
+                    <option value="calendar-generator">calendar-generator.py &#8212; 90-day calendar</option>
+                    <option value="article-generator">article-generator.py &#8212; Long-form articles</option>
+                    <option value="linkedin-outreach">linkedin-outreach.py &#8212; Outreach messages</option>
+                    <option value="milestone-poster">milestone-poster.py &#8212; Milestone posts</option>
+                    <option value="multilingual-expander">multilingual-expander.py &#8212; FR/NL expansion</option>
+                    <option value="organizer-kit">organizer-kit.py &#8212; Full organizer kit</option>
+                    <option value="origin-tools">origin-tools.py &#8212; Main menu (runs all)</option>
+                  </select>
+                </div>
+                <div>
+                  <span class="modal-label" style="display:block;margin-top:0">Brief / Input</span>
+                  <textarea class="modal-textarea" id="run-brief" style="width:100%" placeholder="What do you need? Include audience, language, tone, deadline, or any specific details..."></textarea>
+                </div>
+                <button class="btn btn-gold" style="width:100%;text-align:center" onclick="simulateRun()">Run Script &#9654;</button>
+              </div>
+              <div class="run-output" id="run-output" style="margin-top:1rem;display:none"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Standard Script Pattern</div>
+              <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.07);padding:1.2rem;font-family:monospace;font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.8">
+<span style="color:var(--gold)">import</span> anthropic<br>
+<span style="color:var(--gold)">from</span> pathlib <span style="color:var(--gold)">import</span> Path<br>
+<span style="color:var(--gold)">from</span> dotenv <span style="color:var(--gold)">import</span> load_dotenv<br><br>
+load_dotenv()<br>
+client = anthropic.Anthropic()<br><br>
+<span style="color:rgba(255,255,255,0.25)"># Brand file as system prompt</span><br>
+brand = Path(<span style="color:var(--green)">"writing-room/docs/origin-brand.md"</span>).read_text()<br><br>
+response = client.messages.create(<br>
+&nbsp;&nbsp;model=<span style="color:var(--green)">"claude-opus-4-6"</span>,<br>
+&nbsp;&nbsp;max_tokens=<span style="color:var(--gold)">2000</span>,<br>
+&nbsp;&nbsp;system=brand,<br>
+&nbsp;&nbsp;messages=[{<span style="color:var(--green)">"role"</span>: <span style="color:var(--green)">"user"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--green)">"content"</span>: YOUR_PROMPT}]<br>
+)
+              </div>
+              <div class="pull-quote" style="margin-top:1.25rem">Every script loads origin-brand.md as system prompt. All output sounds like ORIGIN. Always.</div>
+              <div class="section-title" style="margin-top:1rem">Output Saved To</div>
+              <div style="display:flex;flex-direction:column;gap:0">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.05em;color:rgba(201,168,76,0.65);padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">&#8594; community/content/social/</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.05em;color:rgba(201,168,76,0.65);padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">&#8594; community/content/emails/</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.05em;color:rgba(201,168,76,0.65);padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">&#8594; community/content/articles/</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:0.72rem;letter-spacing:0.05em;color:rgba(201,168,76,0.65);padding:0.45rem 0">&#8594; community/content/organizer-kits/</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRAND -->
+      <div class="page" id="page-brand">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">Writing Room</div>
+            <div class="page-title">Brand<br>Files</div>
+          </div>
+          <div class="header-btns">
+            <button class="btn btn-gold" onclick="openModal()">+ New Brief</button>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="brand-grid">
+            <div class="brand-card">
+              <div class="brand-file-name">origin-vocabulary.md <span class="tag tag-ready">Ready</span></div>
+              <div class="brand-file-desc">Preferred and avoided words. 15 core concepts with definitions. The language of ORIGIN. Build this first &#8212; everything references it.</div>
+              <div style="display:flex;gap:0.5rem;align-items:center"><span class="tag tag-final">Done</span></div>
+            </div>
+            <div class="brand-card">
+              <div class="brand-file-name">origin-voice.md <span class="tag tag-ready">Ready</span></div>
+              <div class="brand-file-desc">Tone rules, always/never lists, writing examples. The sound of ORIGIN across all channels. Build second &#8212; after vocabulary.</div>
+              <div style="display:flex;gap:0.5rem;align-items:center"><span class="tag tag-final">Done</span></div>
+            </div>
+            <div class="brand-card">
+              <div class="brand-file-name">origin-audiences.md <span class="tag tag-tested">Draft</span></div>
+              <div class="brand-file-desc">5&#8211;6 audience profiles: who they are, what they need, how ORIGIN speaks to each of them specifically.</div>
+              <div style="display:flex;gap:0.5rem;align-items:center"><span class="tag tag-draft">In Progress</span></div>
+            </div>
+            <div class="brand-card">
+              <div class="brand-file-name">origin-narrative.md <span class="tag tag-draft">Pending</span></div>
+              <div class="brand-file-desc">ORIGIN's story, vision, and the October 2026 moment. The why behind everything. Requires all other files first.</div>
+              <div style="display:flex;gap:0.5rem;align-items:center"><span class="tag tag-draft">Not Started</span></div>
+            </div>
+          </div>
+
+          <div style="background:rgba(201,168,76,0.05);border:1px solid var(--gold-border);padding:1.5rem">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem">Master File &#8212; origin-brand.md</div>
+            <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.75;max-width:640px">All 4 brand files merged into one master. Every Python script in production loads this as system prompt. Once complete, all generated content automatically sounds like ORIGIN &#8212; no re-prompting, no re-explaining.</div>
+            <div style="margin-top:1rem"><span class="tag tag-draft">Pending &#8212; needs all 4 source files complete</span></div>
+          </div>
+
+          <div class="pull-quote">Build order: vocabulary &#8594; voice &#8594; audiences &#8594; narrative &#8594; origin-brand.md (merged master)</div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="page" id="page-progress">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">System Status</div>
+            <div class="page-title">Build<br>Progress</div>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="two-col">
+            <div class="panel">
+              <div class="panel-title">Build Phases</div>
+              <div class="phase-row">
+                <div class="phase-num" style="color:var(--green)">1</div>
+                <div class="phase-info">
+                  <div class="phase-name" style="color:var(--green)">Brand &#8212; Writing Room</div>
+                  <div class="phase-sub">vocabulary &#8594; voice &#8594; audiences &#8594; narrative &#8594; origin-brand.md</div>
+                </div>
+                <div class="phase-right">
+                  <div class="progress-bar"><div class="progress-fill green" style="width:40%"></div></div>
+                  <div class="progress-pct">2 / 5 files</div>
+                </div>
+              </div>
+              <div class="phase-row">
+                <div class="phase-num" style="color:var(--gold)">2</div>
+                <div class="phase-info">
+                  <div class="phase-name" style="color:var(--gold)">Scripts &#8212; Production</div>
+                  <div class="phase-sub">9 scripts built &#183; story-collector + email-writer final</div>
+                </div>
+                <div class="phase-right">
+                  <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
+                  <div class="progress-pct">Active</div>
+                </div>
+              </div>
+              <div class="phase-row">
+                <div class="phase-num">3</div>
+                <div class="phase-info">
+                  <div class="phase-name">Knowledge Graph</div>
+                  <div class="phase-sub">origin-graph.json &#8594; knowledge-graph.py</div>
+                </div>
+                <div class="phase-right">
+                  <div class="progress-bar"><div class="progress-fill" style="width:5%"></div></div>
+                  <div class="progress-pct">Not started</div>
+                </div>
+              </div>
+              <div class="phase-row">
+                <div class="phase-num">4</div>
+                <div class="phase-info">
+                  <div class="phase-name">System Polish</div>
+                  <div class="phase-sub">README.md &#183; 90-day content roadmap</div>
+                </div>
+                <div class="phase-right">
+                  <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+                  <div class="progress-pct">Pending</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">What's Been Built</div>
+              <div style="display:flex;flex-direction:column;gap:0">
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#10003;</span>
+                  <span class="script-name" style="font-size:0.78rem">origin-vocabulary.md</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#10003;</span>
+                  <span class="script-name" style="font-size:0.78rem">origin-voice.md</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#126;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.5)">origin-audiences.md (draft)</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#9675;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.35)">origin-narrative.md</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#9675;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.35)">origin-brand.md (master)</span>
+                </div>
+                <div style="height:0.5rem"></div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#10003;</span>
+                  <span class="script-name" style="font-size:0.78rem">story-collector.py</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#10003;</span>
+                  <span class="script-name" style="font-size:0.78rem">email-writer.py</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#126;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.5)">calendar-generator.py (tested)</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#126;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.5)">article-generator.py (tested)</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#9675;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.35)">linkedin-outreach.py (draft)</span>
+                </div>
+                <div style="padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#9675;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.35)">knowledge-graph.py</span>
+                </div>
+                <div style="padding:0.55rem 0;display:flex;align-items:center;gap:0.75rem">
+                  <span style="color:rgba(255,255,255,0.2);font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;min-width:14px">&#9675;</span>
+                  <span class="script-name" style="font-size:0.78rem;color:rgba(255,255,255,0.35)">origin-graph.json</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMUNITY -->
+      <div class="page" id="page-community">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">Distribution Layer</div>
+            <div class="page-title">Community<br>Content</div>
+          </div>
+          <div class="header-btns">
+            <button class="btn btn-ghost" onclick="showPage('run',document.querySelectorAll('.nav-item')[6])">Generate Content &#8594;</button>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div class="tabs">
+            <div class="tab active" onclick="switchTab(this,'social')">Social</div>
+            <div class="tab" onclick="switchTab(this,'emails')">Emails</div>
+            <div class="tab" onclick="switchTab(this,'articles')">Articles</div>
+            <div class="tab" onclick="switchTab(this,'kits')">Organizer Kits</div>
+          </div>
+          <div id="tab-social">
+            <div class="content-list">
+              <div class="content-item">
+                <div><div class="content-item-name">linkedin-oct-launch.md</div><div class="content-item-sub">October announcement &#183; LinkedIn &#183; EN</div></div>
+                <div class="content-item-right"><span class="tag tag-final">Ready</span><button class="btn-sm">Export</button></div>
+              </div>
+              <div class="content-item">
+                <div><div class="content-item-name">instagram-countdown-100.md</div><div class="content-item-sub">100 days out &#183; Instagram &#183; EN/FR</div></div>
+                <div class="content-item-right"><span class="tag tag-draft">Draft</span><button class="btn-sm">Export</button></div>
+              </div>
+            </div>
+            <div class="pull-quote" style="margin-top:1.25rem">Content is generated by production scripts. Drop a brief in Run a Script &#8594; output lands here automatically.</div>
+          </div>
+          <div id="tab-emails" style="display:none">
+            <div class="content-list">
+              <div class="content-item">
+                <div><div class="content-item-name">organizer-01-welcome.md</div><div class="content-item-sub">Organizer onboarding &#8212; Email 1</div></div>
+                <div class="content-item-right"><span class="tag tag-final">Ready</span><button class="btn-sm">Export</button></div>
+              </div>
+              <div class="content-item">
+                <div><div class="content-item-name">organizer-02-toolkit.md</div><div class="content-item-sub">Organizer onboarding &#8212; Email 2</div></div>
+                <div class="content-item-right"><span class="tag tag-tested">Tested</span><button class="btn-sm">Export</button></div>
+              </div>
+            </div>
+          </div>
+          <div id="tab-articles" style="display:none">
+            <div class="content-list">
+              <div class="content-item">
+                <div><div class="content-item-name">2026-09-01-what-is-origin.md</div><div class="content-item-sub">Explainer article &#183; EN &#183; 1,200 words</div></div>
+                <div class="content-item-right"><span class="tag tag-draft">Draft</span><button class="btn-sm">Export</button></div>
+              </div>
+            </div>
+          </div>
+          <div id="tab-kits" style="display:none">
+            <div class="content-list">
+              <div class="content-item">
+                <div><div class="content-item-name">organizer-kit-EN.md</div><div class="content-item-sub">Full organizer kit &#183; English &#183; October 17</div></div>
+                <div class="content-item-right"><span class="tag tag-draft">Draft</span><button class="btn-sm">Export</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KNOWLEDGE GRAPH -->
+      <div class="page" id="page-graph">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">Production &#8212; Phase 3</div>
+            <div class="page-title">Knowledge<br>Graph</div>
+          </div>
+          <div class="header-btns">
+            <button class="btn btn-gold" onclick="openModal()">+ Add Node</button>
+          </div>
+        </div>
+        <div class="page-scroll">
+          <div style="background:rgba(201,168,76,0.05);border:1px solid var(--gold-border);padding:1.25rem 1.5rem">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem">Phase 3 &#8212; Most Strategically Valuable Next Build</div>
+            <div style="font-size:0.8rem;color:var(--text-mid);line-height:1.7">Connects speakers, concepts, and partners so every script can reference them accurately. origin-graph.json is the data layer. knowledge-graph.py queries it. Once built, all 9 scripts get smarter.</div>
+          </div>
+          <div class="kg-grid">
+            <div class="kg-node" style="border-left-color:var(--gold)">
+              <div class="kg-node-type">Speaker</div>
+              <div class="kg-node-name">Placeholder Speaker A</div>
+              <div class="kg-node-meta">Concepts: stewardship, indigenous wisdom<br>Connections: 3 events, 2 partners</div>
+            </div>
+            <div class="kg-node">
+              <div class="kg-node-type">Concept</div>
+              <div class="kg-node-name">Earth Stewardship</div>
+              <div class="kg-node-meta">Core concept &#183; linked to 8 speakers<br>Featured in: brand master, all scripts</div>
+            </div>
+            <div class="kg-node">
+              <div class="kg-node-type">Concept</div>
+              <div class="kg-node-name">One Billion Hearts</div>
+              <div class="kg-node-meta">Fund concept &#183; the October 2026 goal<br>Referenced in: every script output</div>
+            </div>
+            <div class="kg-node">
+              <div class="kg-node-type">Partner</div>
+              <div class="kg-node-name">Placeholder Org</div>
+              <div class="kg-node-meta">Type: NGO &#183; Region: Global<br>Contact: pending</div>
+            </div>
+            <div class="kg-node" style="border-left-color:rgba(255,255,255,0.1);cursor:default;opacity:0.45">
+              <div class="kg-node-type">+ Add Speaker</div>
+              <div class="kg-node-name" style="color:rgba(255,255,255,0.3)">Empty Slot</div>
+              <div class="kg-node-meta">Use Add Node above</div>
+            </div>
+            <div class="kg-node" style="border-left-color:rgba(255,255,255,0.1);cursor:default;opacity:0.45">
+              <div class="kg-node-type">+ Add Concept</div>
+              <div class="kg-node-name" style="color:rgba(255,255,255,0.3)">Empty Slot</div>
+              <div class="kg-node-meta">Connect your vocabulary here</div>
+            </div>
+          </div>
+          <div class="pull-quote">origin-graph.json &#8594; knowledge-graph.py &#8594; every script gets accurate speaker names, concept definitions, and partner details without re-prompting.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-bar">
+    <span class="footer-text">ORIGIN AI &#8212; origin-ai/ workspace</span>
+    <span class="footer-text">Brand &#8594; Production &#8594; Community &#183; One-way flow</span>
+    <span class="footer-text">Phase 2 Active &#183; Oct 17, 2026</span>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">New Brief</div>
+      <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    </div>
+    <span class="modal-label">Script / Workspace</span>
+    <select class="run-select">
+      <option>production &#8212; email-writer.py</option>
+      <option>production &#8212; calendar-generator.py</option>
+      <option>production &#8212; story-collector.py</option>
+      <option>production &#8212; article-generator.py</option>
+      <option>writing-room &#8212; new brand doc</option>
+      <option>community &#8212; social post</option>
+    </select>
+    <span class="modal-label">Brief Description</span>
+    <textarea class="modal-textarea" placeholder="What do you need? Include audience, language, tone, deadline, or any specific details..."></textarea>
+    <span class="modal-label">Output Language</span>
+    <select class="run-select">
+      <option>English (default)</option>
+      <option>French</option>
+      <option>Dutch</option>
+      <option>English + French</option>
+      <option>English + Dutch</option>
+      <option>All three</option>
+    </select>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="closeModal()">Save Brief &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateCountdown() {
+  const launch = new Date('2026-10-17');
+  const today = new Date();
+  const diff = Math.ceil((launch - today) / (1000*60*60*24));
+  document.getElementById('days-num').textContent = diff;
+  document.getElementById('countdown-pill').textContent = 'Oct 17, 2026 — ' + diff + ' Days';
+}
+updateCountdown();
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + id);
+  if (pg) pg.classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function switchTab(el, name) {
+  document.querySelectorAll('#page-community .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['social','emails','articles','kits'].forEach(t => {
+    const el2 = document.getElementById('tab-' + t);
+    if (el2) el2.style.display = t === name ? 'block' : 'none';
+  });
+}
+
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function simulateRun() {
+  const script = document.getElementById('script-select').value;
+  const out = document.getElementById('run-output');
+  if (!script) { alert('Select a script first.'); return; }
+  out.style.display = 'block';
+  const msgs = {
+    'email-writer': 'Loading origin-brand.md as system prompt...\nRunning email-writer.py...\n\n[OUTPUT] organizer-01-welcome.md\n"Welcome to ORIGIN. You\'ve just joined something that matters..."\n\nSaved to community/content/emails/ ✓',
+    'story-collector': 'Loading origin-brand.md as system prompt...\nRunning story-collector.py...\n\n[OUTPUT] story-2026-03-en.md\nStructured story collected. 340 words.\nSaved to community/content/articles/ ✓',
+    'calendar-generator': 'Loading origin-brand.md as system prompt...\nRunning calendar-generator.py...\nGenerating 90-day content calendar...\n\n[OUTPUT] calendar-q3-2026.md\n90 posts · 3 channels · EN/FR/NL\nSaved to community/content/ ✓',
+    'origin-tools': 'ORIGIN Tools — Main Menu\n──────────────────────\n1. story-collector\n2. calendar-generator\n3. email-writer\n4. article-generator\n5. linkedin-outreach\n6. milestone-poster\n7. multilingual-expander\n8. organizer-kit\n──────────────────────\nAll scripts load origin-brand.md automatically.'
+  };
+  out.textContent = msgs[script] || 'Loading origin-brand.md as system prompt...\nRunning ' + script + '.py...\n\nScript executed successfully.\nOutput saved to community/content/ ✓';
+}
+</script>
+</body>
+</html>
